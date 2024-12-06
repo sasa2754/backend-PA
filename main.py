@@ -15,7 +15,7 @@ def addCart():
     
     return jsonify('Produto adicionado no carrinho!'), 201
 
-@app.route('cart/<int:id>', methods=['DELETE'])
+@app.route('/cart/<int:id>', methods=['DELETE'])
 def deleteCart(id):
     global databaseCarrinho
     databaseCarrinho = [product for product in databaseCarrinho if product['id'] != id]
@@ -53,7 +53,7 @@ def updateUser():
 
 # Delete User
 @app.route('/user/<int:id>', methods=['DELETE'])
-def deleteProduct(id):
+def deleteUser(id):
     global databaseUser
     databaseUser = [user for user in databaseUser if user['id'] != id]
     
