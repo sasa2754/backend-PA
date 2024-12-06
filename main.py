@@ -1,0 +1,169 @@
+from flask import Flask, request, jsonify
+
+app = Flask(__name__)
+
+databaseProduct = []
+databaseUser = []
+databaseCarrinho = []
+databaseVendas = []
+
+@app.route('/cart', methods=['POST'])
+def addCart():
+    newProduct = request.get_json()
+    newProduct['id'] = len(databaseCarrinho) + 1
+    databaseCarrinho.append(newProduct)
+    
+    return jsonify('Produto adicionado no carrinho!'), 201
+
+@app.route('cart/<int:id>', methods=['DELETE'])
+def deleteCart(id):
+    global databaseCarrinho
+    databaseCarrinho = [product for product in databaseCarrinho if product['id'] != id]
+    
+    return jsonify('Produto deletado do carrinho', 204)
+    
+
+# Adicionar um novo usuário
+@app.route('/user', methods=['POST'])
+def addUser():
+    newUser = request.get_json()
+    newUser['id'] = len(databaseUser) + 1
+    databaseUser.append(newUser)
+    
+    return jsonify('Usuário cadastrado com sucesso!'), 201
+
+# Pegar todos os usuários
+@app.route('/user', methods=['GET'])
+def getAllUsers():
+    return jsonify(databaseUser), 200
+
+# Update user
+@app.route('/user/<int:id>', methods=['PUT'])
+def updateUser():
+    updatedUser = request.get_json()
+    
+    for user in databaseUser:
+        if user['id'] == id:
+            user['name'] = updatedUser.get('name', user['name'])
+            user['email'] = updatedUser.get('email', user['email'])
+            user['password'] = updatedUser.get('password', user['password'])
+            return jsonify(user), 200
+        
+    return jsonify({"message": "Usuário não encontrado"}), 404
+
+# Delete User
+@app.route('/user/<int:id>', methods=['DELETE'])
+def deleteProduct(id):
+    global databaseUser
+    databaseUser = [user for user in databaseUser if user['id'] != id]
+    
+    return jsonify('Usuário deletado', 204)
+
+# Pegar todos os produtos
+@app.route('/product', methods=['GET'])
+def getAllProducts():
+    return jsonify(databaseProduct), 200
+
+
+# Pegar um produto por nome
+@app.route('/products/<name>', methods=['GET'])
+def getProductByName(name):
+    products = [product for product in databaseUser if name.lower() in product["name"].lower()]
+    
+    if products:
+        return jsonify(products), 200
+    else:
+        return jsonify({"message": "Produto não encontrado"}), 404
+    
+
+# Adicionar um novo produto
+@app.route('/product', methods=['POST'])
+def addProduct():
+    newProduct = request.get_json()
+    newProduct['id'] = len(databaseProduct) + 1
+    databaseProduct.append(newProduct)
+    
+    return jsonify('Produto adicionado com sucesso!'), 201
+
+
+# Atualizar um produto
+@app.route('/product/<int:id>', methods=['PUT'])
+def updateProduct(id):
+    updatedProduct = request.get_json()
+    
+    for product in databaseProduct:
+        if product['id'] == id:
+            product['name'] = updatedProduct.get('name', product['name'])
+            product['price'] = updatedProduct.get('price', product['price'])
+            product['amount'] = updatedProduct.get('amount', product['amount'])
+            return jsonify(product), 200
+        
+    return jsonify({"message": "Produto não encontrado"}), 404
+
+
+# Deletar um produto
+@app.route('/product/<int:id>', methods=['DELETE'])
+def deleteProduct(id):
+    global databaseProduct
+    databaseProduct = [product for product in databaseProduct if product['id'] != id]
+    
+    return jsonify('Produto deletado', 204)
+
+@app.route('/sell', methods=['POST'])
+def sellProducts():
+    global databaseCarrinho, databaseVendas
+    
+    if not databaseCarrinho:
+        return jsonify({"message": "Carrinho vazio"}), 400
+    
+    for item in databaseCarrinho:
+        venda = {
+            'id': item['id'],
+            'name': item['name'],
+            'price': item['price'],
+            'amount': item['amount'],
+        }
+        
+        databaseVendas.append(venda)
+        
+        for product in databaseProduct:
+            if product['id'] == item['id']:
+                product['amount'] -= item['amount']
+                
+    databaseCarrinho.clear()
+    
+    return jsonify({"Message": "Produtos vendidos com sucesso!"}), 200
+
+# Requisição pra ver a análise das vendas
+@app.route('/analytics', methods=['GET'])
+def getAnalytics():
+    vendas_por_produto = {}
+    total_geral = 0
+    quantidade_total = 0
+
+    # Contabilizar as vendas
+    for venda in databaseVendas:
+        product_id = venda['product_id']
+        if product_id not in vendas_por_produto:
+            vendas_por_produto[product_id] = {
+                'name': venda['name'],
+                'quantidade': 0,
+                'valor_vendido': 0.0
+            }
+        
+        vendas_por_produto[product_id]['quantidade'] += venda['amount']
+        vendas_por_produto[product_id]['valor_vendido'] += venda['price'] * venda['amount']
+        total_geral += venda['price'] * venda['amount']
+        quantidade_total += venda['amount']
+
+    # Gerar o relatório de vendas
+    resumo_vendas = {
+        "vendas_por_produto": vendas_por_produto,
+        "quantidade_total_vendida": quantidade_total,
+        "total_vendido": total_geral
+    }
+
+    return jsonify(resumo_vendas), 200
+
+if __name__ == '__main__':
+    app.run(debug=True)
