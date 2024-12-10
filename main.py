@@ -32,6 +32,26 @@ def addUser():
     
     return jsonify('Usuário cadastrado com sucesso!'), 201
 
+# Login
+@app.route('/login', methods=['POST'])
+def login():
+    login_data = request.get_json()
+
+    email = login_data.get('email')
+    password = login_data.get('password')
+
+    if not email or not password:
+        return jsonify({"message": "Email e senha são obrigatórios!"}), 400
+
+    for user in databaseUser:
+        if user['email'] == email:
+            if user['password'] == password:
+                return jsonify({"message": "Login bem-sucedido!", "user": user}), 200
+            else:
+                return jsonify({"message": "Senha incorreta!"}), 401
+
+    return jsonify({"message": "Usuário não encontrado!"}), 404
+
 # Pegar todos os usuários
 @app.route('/user', methods=['GET'])
 def getAllUsers():
