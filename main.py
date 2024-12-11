@@ -24,6 +24,10 @@ def deleteCart(id):
     
     return jsonify('Produto deletado do carrinho', 204)
     
+# Pegar todos os usuários
+@app.route('/cart', methods=['GET'])
+def getAllCarts():
+    return jsonify(databaseCarrinho), 200
 
 # Adicionar um novo usuário
 @app.route('/user', methods=['POST'])
