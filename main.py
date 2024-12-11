@@ -47,6 +47,7 @@ def login():
 
     for user in databaseUser:
         if user['email'] == email:
+            print(user)
             if user['password'] == password:
                 return jsonify({"message": "Login bem-sucedido!", "user": user}), 200
             else:
@@ -61,16 +62,23 @@ def getAllUsers():
 
 # Update user
 @app.route('/user/<int:id>', methods=['PUT'])
-def updateUser():
+def updateUser(id):
     updatedUser = request.get_json()
-    
+    print("Dados recebidos:", updatedUser)
+
     for user in databaseUser:
         if user['id'] == id:
-            user['name'] = updatedUser.get('name', user['name'])
-            user['email'] = updatedUser.get('email', user['email'])
-            user['password'] = updatedUser.get('password', user['password'])
-            return jsonify(user), 200
-        
+            print('entrou no if')
+            if updatedUser.get('name') != '' and updatedUser.get('name') != None :
+                user['name'] = updatedUser.get('name', user['name'])
+                if updatedUser.get('email') != '' and updatedUser.get('email') != None :
+                    user['email'] = updatedUser.get('email', user['email'])
+                    if updatedUser.get('password') != '' and updatedUser.get('password') != None and updatedUser.get('newPassword') != '' and updatedUser.get('newPassword') != None :
+                        if user['password'] == updatedUser.get('password'):
+                            user['password'] = updatedUser.get('newPassword', user['password'])
+                            return jsonify(user), 200
+                        return jsonify({"message": "Senha incorreta"}), 400
+
     return jsonify({"message": "Usuário não encontrado"}), 404
 
 # Delete User
