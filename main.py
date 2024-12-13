@@ -8,6 +8,7 @@ databaseProduct = []
 databaseUser = []
 databaseCarrinho = []
 databaseVendas = []
+databaseOrders = []
 
 @app.route('/cart', methods=['POST'])
 def addCart():
