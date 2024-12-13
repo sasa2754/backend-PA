@@ -1,5 +1,10 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, send_file
 from flask_cors import CORS
+from io import BytesIO
+from reportlab.lib.pagesizes import letter
+from reportlab.pdfgen import canvas
+
+# pip install flask flask-cors reportlab
 
 app = Flask(__name__)
 CORS(app)
@@ -9,6 +14,7 @@ databaseUser = []
 databaseCarrinho = []
 databaseVendas = []
 
+# Adicionar um produto no carrinho
 @app.route('/cart', methods=['POST'])
 def addCart():
     newProduct = request.get_json()
@@ -17,6 +23,7 @@ def addCart():
     
     return jsonify('Produto adicionado no carrinho!'), 201
 
+# Deletar um produto do carrinho
 @app.route('/cart/<int:id>', methods=['DELETE'])
 def deleteCart(id):
     global databaseCarrinho
@@ -34,6 +41,7 @@ def getAllCarts():
 def addUser():
     newUser = request.get_json()
     newUser['id'] = len(databaseUser) + 1
+    newUser['isAdmin'] = False
     databaseUser.append(newUser)
     
     return jsonify('Usuário cadastrado com sucesso!'), 201
@@ -45,6 +53,7 @@ def login():
 
     email = login_data.get('email')
     password = login_data.get('password')
+
 
     if not email or not password:
         return jsonify({"message": "Email e senha são obrigatórios!"}), 400
@@ -150,6 +159,8 @@ def sellProducts():
     if not databaseCarrinho:
         return jsonify({"message": "Carrinho vazio"}), 400
     
+    totalVendas = 0
+    vendas = []
     for item in databaseCarrinho:
         venda = {
             'id': item['id'],
@@ -158,15 +169,35 @@ def sellProducts():
             'amount': item['amount'],
         }
         
-        databaseVendas.append(venda)
+        vendas.append(venda)
+        totalVendas += venda['price']
         
-        for product in databaseProduct:
-            if product['id'] == item['id']:
-                product['amount'] -= item['amount']
-                
-    databaseCarrinho.clear()
+    # Gerar o PDF
+    pdf_buffer = BytesIO()
+    c = canvas.Canvas(pdf_buffer, pagesize=letter)
+
+    c.drawString(100, 750, "Nota Fiscal")
+    c.drawString(100, 730, "Produtos comprados:")
     
-    return jsonify({"Message": "Produtos vendidos com sucesso!"}), 200
+    y_position = 710
+    for venda in vendas:
+        c.drawString(100, y_position, f"Produto: {venda['name']} | Quantidade: {venda['amount']} | Preço: {venda['price']} | Total: {venda['total']}")
+        y_position -= 20
+    
+    c.drawString(100, y_position - 30, f"Total da Compra: {totalVendas}")
+
+    # Salvar o PDF no buffer
+    c.save()
+    pdf_buffer.seek(0)
+        
+        
+        # Limpar o carrinho e registrar a venda
+    for item in databaseCarrinho:
+        databaseVendas.append(item)
+    databaseCarrinho.clear()
+
+    # Enviar o PDF como resposta
+    return send_file(pdf_buffer, as_attachment=True, download_name="nota_fiscal.pdf", mimetype='application/pdf')
 
 # Requisição pra ver a análise das vendas
 @app.route('/analytics', methods=['GET'])
@@ -199,5 +230,22 @@ def getAnalytics():
 
     return jsonify(resumo_vendas), 200
 
+def create_admin_user():
+    for user in databaseUser:
+        if user.get('isAdmin') == True:
+            return
+        
+    admin_user = {
+        'id': len(databaseUser) + 1,
+        'name': 'Admin',
+        'email': 'admin@email.com',
+        'password': 'admin123',
+        'isAdmin': True
+    }
+    
+    databaseUser.append(admin_user)
+    print('Usuário admin criado com sucesso!')
+
 if __name__ == '__main__':
+    create_admin_user()
     app.run(debug=True)
