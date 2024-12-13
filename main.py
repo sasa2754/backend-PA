@@ -129,6 +129,42 @@ def addProduct():
     
     return jsonify('Produto adicionado com sucesso!'), 201
 
+# add products default para teste
+
+productsTeste = [
+    {
+        "id": 1,
+        "name": "Lua de Mel",
+        "price": 19.99,
+        "amount": 10,
+        "image": "luaDeMel.png"
+    },
+    {
+        "id": 2,
+        "name": "Sonho de ninho",
+        "price": 29.99,
+        "amount": 5,
+        "image": "sonho.png"
+    },
+    {
+        "id": 3,
+        "name": "Donuts",
+        "price": 39.99,
+        "amount": 8,
+        "image": "donuts.png"
+    },
+    {
+        "id": 4,
+        "name": "Cupcake",
+        "price": 9.99,
+        "amount": 3,
+        "image": "cupcake.webp"
+    },
+
+]
+
+# Adicionando os produtos ao banco de dados (lista)
+databaseProduct.extend(productsTeste) 
 
 # Atualizar um produto
 @app.route('/product/<int:id>', methods=['PUT'])
@@ -199,6 +235,7 @@ def sellProducts():
 
     # Enviar o PDF como resposta
     return send_file(pdf_buffer, as_attachment=True, download_name="nota_fiscal.pdf", mimetype='application/pdf')
+
 
 # Requisição pra ver a análise das vendas
 @app.route('/analytics', methods=['GET'])
