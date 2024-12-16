@@ -135,28 +135,28 @@ productsTeste = [
     {
         "id": 1,
         "name": "Lua de Mel",
-        "price": 19.99,
+        "price": 19,
         "amount": 10,
         "image": "luaDeMel.png"
     },
     {
         "id": 2,
         "name": "Sonho de ninho",
-        "price": 29.99,
+        "price": 29,
         "amount": 5,
         "image": "sonho.png"
     },
     {
         "id": 3,
         "name": "Donuts",
-        "price": 39.99,
+        "price": 39,
         "amount": 8,
         "image": "donuts.png"
     },
     {
         "id": 4,
         "name": "Cupcake",
-        "price": 9.99,
+        "price": 9,
         "amount": 3,
         "image": "cupcake.webp"
     },
@@ -203,7 +203,6 @@ def sellProducts():
             'id': item['id'],
             'name': item['name'],
             'price': item['price'],
-            'amount': item['amount'],
         }
         
         vendas.append(venda)
@@ -217,8 +216,10 @@ def sellProducts():
     c.drawString(100, 730, "Produtos comprados:")
     
     y_position = 710
+    valorTotal = 0
     for venda in vendas:
-        c.drawString(100, y_position, f"Produto: {venda['name']} | Quantidade: {venda['amount']} | Preço: {venda['price']} | Total: {venda['total']}")
+        valorTotal += venda['price']
+        c.drawString(100, y_position, f"Produto: {venda['name']} | Preço: {venda['price']}")
         y_position -= 20
     
     c.drawString(100, y_position - 30, f"Total da Compra: {totalVendas}")
@@ -226,9 +227,9 @@ def sellProducts():
     # Salvar o PDF no buffer
     c.save()
     pdf_buffer.seek(0)
+    
         
-        
-        # Limpar o carrinho e registrar a venda
+    # Limpar o carrinho e registrar a venda
     for item in databaseCarrinho:
         databaseVendas.append(item)
     databaseCarrinho.clear()
