@@ -228,10 +228,16 @@ def sellProducts():
     c.save()
     pdf_buffer.seek(0)
     
+    for product in databaseProduct:
+        if product['id'] == item['id']:
+            product['amount'] -= item['amount']
+            break
         
     # Limpar o carrinho e registrar a venda
     for item in databaseCarrinho:
         databaseVendas.append(item)
+        
+        
     databaseCarrinho.clear()
 
     # Enviar o PDF como resposta
@@ -241,13 +247,16 @@ def sellProducts():
 # Requisição pra ver a análise das vendas
 @app.route('/analytics', methods=['GET'])
 def getAnalytics():
+    quantidade_total = 0
     vendas_por_produto = {}
     total_geral = 0
-    quantidade_total = 0
+    
+    quantidade_total += len(databaseVendas)
+    
 
     # Contabilizar as vendas
     for venda in databaseVendas:
-        product_id = venda['product_id']
+        product_id = venda['id']
         if product_id not in vendas_por_produto:
             vendas_por_produto[product_id] = {
                 'name': venda['name'],
@@ -256,14 +265,15 @@ def getAnalytics():
             }
         
         vendas_por_produto[product_id]['quantidade'] += venda['amount']
-        vendas_por_produto[product_id]['valor_vendido'] += venda['price'] * venda['amount']
-        total_geral += venda['price'] * venda['amount']
-        quantidade_total += venda['amount']
+        vendas_por_produto[product_id]['valor_vendido'] += venda['price']
+        total_geral += venda['price']
+        
+        
 
     # Gerar o relatório de vendas
     resumo_vendas = {
         "vendas_por_produto": vendas_por_produto,
-        "quantidade_total_vendida": quantidade_total,
+        "quantidade_produtos_vendidos": quantidade_total,
         "total_vendido": total_geral
     }
 
