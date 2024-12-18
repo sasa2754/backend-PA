@@ -4,7 +4,7 @@ from flask_cors import CORS
 from io import BytesIO
 from reportlab.lib.pagesizes import letter
 from reportlab.pdfgen import canvas
-from twilio.rest import Client
+
 
 # pip install flask flask-cors reportlab
 
@@ -18,37 +18,37 @@ databaseVendas = []
 databaseOrders = []
 
 # Adiciona o Account SID
-account_sid = 'US36cd4983aef4f122bfab72ea03128639'
+# account_sid = 'US36cd4983aef4f122bfab72ea03128639'
 
-# Adiciona o Auth Token
-auth_token = 'fd4c300d578181a21c723de47fdf33d1'
+# # Adiciona o Auth Token
+# auth_token = 'fd4c300d578181a21c723de47fdf33d1'
 
-@app.route('/send-code', methods=['POST'])
-def sendCode():
-    code = random.randint(1000, 9999)
+# @app.route('/send-code', methods=['POST'])
+# def sendCode():
+#     code = random.randint(1000, 9999)
     
-    # Acessa o número de telefone corretamente
-    clientphone = request.get_json()
-    phone_number = clientphone.get('userPhone')  # Corrigido aqui
+#     # Acessa o número de telefone corretamente
+#     clientphone = request.get_json()
+#     phone_number = clientphone.get('userPhone')  # Corrigido aqui
     
-    if not phone_number:
-        return jsonify({'error': 'Telefone não fornecido'}), 400
+#     if not phone_number:
+#         return jsonify({'error': 'Telefone não fornecido'}), 400
     
-    # Cria um cliente com as credenciais fornecidas
-    client = Client(account_sid, auth_token)
+#     # Cria um cliente com as credenciais fornecidas
+#     client = Client(account_sid, auth_token)
     
-    try:
-        message = client.messages.create(
-            body=f"Olá, o seu código de verificação é: {code}",
-            from_='+5541995050132',  # Substitua pelo seu número Twilio
-            to=phone_number
-        )  # Substitua pelo número do destinatário
+#     try:
+#         message = client.messages.create(
+#             body=f"Olá, o seu código de verificação é: {code}",
+#             from_='+5541995050132',  # Substitua pelo seu número Twilio
+#             to=phone_number
+#         )  # Substitua pelo número do destinatário
         
-        print(f"Mensagem enviada com sucesso! SID: {message.sid}")
-        return jsonify({'message': 'Código enviado com sucesso!'}), 201
-    except Exception as e:
-        print(f"Erro ao enviar a mensagem: {str(e)}")
-        return jsonify({'error': 'Erro ao enviar código'}), 500
+#         print(f"Mensagem enviada com sucesso! SID: {message.sid}")
+#         return jsonify({'message': 'Código enviado com sucesso!'}), 201
+#     except Exception as e:
+#         print(f"Erro ao enviar a mensagem: {str(e)}")
+#         return jsonify({'error': 'Erro ao enviar código'}), 500
 
 
 
@@ -129,6 +129,24 @@ def updateUser(id):
                             user['password'] = updatedUser.get('newPassword', user['password'])
                             return jsonify(user), 200
                         return jsonify({"message": "Senha incorreta"}), 400
+
+    return jsonify({"message": "Usuário não encontrado"}), 404
+
+
+# Update user
+@app.route('/user/recPass', methods=['PUT'])
+def updateUserPass():
+    print('Ta aqui!!!!!!!!!!!!!!!!!!')
+    updatedUser = request.get_json()
+    print("Dados recebidos:", updatedUser)
+
+    for user in databaseUser:
+        
+        if updatedUser.get('id') == user['id'] :
+     
+            user['password'] = updatedUser.get('newPassword', user['password'])
+            
+            return jsonify({"message": "atualizado com sucesso"}), 200
 
     return jsonify({"message": "Usuário não encontrado"}), 404
 
